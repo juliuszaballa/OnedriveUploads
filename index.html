@@ -1,96 +1,394 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Uploads Bar Graph</title>
+  <title>Sheet Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <style>
-    :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
-    body{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      min-height:100vh;
-      margin:0;
-      background:#f6f8fa;
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0;
+      background: #f4f6f9;
+      color: #333;
     }
-    .card{
-      width:min(900px,96%);
-      background:#fff;
-      border-radius:12px;
-      box-shadow:0 8px 24px rgba(18,38,63,0.08);
-      padding:18px;
+
+    /* HEADER */
+    header {
+      background: linear-gradient(90deg, #4CAF50, #2E7D32);
+      color: white;
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
     }
-    h1{
-      font-size:20px;
-      margin:0 0 16px;
-      text-align:center;
+    header img {
+      height: 45px;
+      border-radius: 50%;
+      margin-right: 15px;
+      border: 2px solid white;
     }
-    canvas{ max-width:100%; }
-    footer{
-      font-size:12px;
-      color:#556;
-      margin-top:12px;
-      text-align:center;
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    /* FILTER BUTTONS */
+    .buttons { 
+      margin: 20px; 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 12px;
+    }
+    .buttons button { 
+      padding: 10px 20px; 
+      border-radius: 30px; 
+      border: 1px solid #ccc; 
+      cursor: pointer; 
+      background-color: #fff; 
+      transition: all 0.3s ease;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .buttons button:hover { 
+      background: #e8f5e9; 
+      border-color: #4CAF50;
+    }
+    .buttons button.active { 
+      background-color: #4CAF50; 
+      color: white; 
+      border-color: #4CAF50; 
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* DASHBOARD LAYOUT */
+    .dashboard { 
+      display: grid; 
+      grid-template-columns: 1fr; 
+      grid-row-gap: 30px; 
+      padding: 0 20px 40px;
+    }
+
+    /* CARDS */
+    .cards { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+      gap: 20px; 
+    }
+    .card { 
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      padding: 20px; 
+      border-radius: 15px; 
+      text-align: center; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card:hover { 
+      transform: translateY(-5px); 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .card h3 { 
+      margin: 0; 
+      font-size: 14px; 
+      color: #777; 
+    }
+    .card p { 
+      margin: 10px 0 0; 
+      font-size: 28px; 
+      font-weight: 700; 
+      color: #222; 
+    }
+
+    /* TABS SECTION */
+    #tabs { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-bottom: 15px;
+    }
+    #tabs button {
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: #eee;
+      transition: 0.3s;
+      font-weight: 500;
+    }
+    #tabs button:hover { background: #ddd; }
+    #tabs button.activeTab { background: #4CAF50; color: white; font-weight: bold; }
+
+    #tabContent { 
+      margin: 20px; 
+      background: #fff; 
+      padding: 25px; 
+      border-radius: 15px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    #tabContent h3 { margin-top: 0; font-size: 20px; color: #333; }
+
+    /* TABLE STYLE */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 10px; 
+      font-size: 14px;
+    }
+    table th, table td { 
+      border: 1px solid #ddd; 
+      padding: 10px 8px; 
+      text-align: center; 
+    }
+    table th { 
+      background: #4CAF50; 
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    table tr:nth-child(even) { background: #f9f9f9; }
+    table tr:hover { background: #e8f5e9; }
+
+    /* CHART */
+    canvas { 
+      background: #fff; 
+      border-radius: 15px; 
+      padding: 10px; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="card">
-    <h1>Number of Uploads per Person</h1>
-    <canvas id="uploadChart" aria-label="Bar chart showing uploads" role="img"></canvas>
-    <footer>Live data from Google Sheets</footer>
+
+  <!-- HEADER -->
+  <header>
+  
+    <img src="RFM-logo.jpg" alt="Logo"> 
+    <h1>Onedrive Uploads Dashboard</h1>
+  </header>
+
+  <!-- Filter Buttons -->
+  <div class="buttons" id="filterButtons"></div>
+
+  <!-- Dashboard layout -->
+  <div class="dashboard">
+    <!-- Cards -->
+    <div class="cards" id="cardsContainer"></div>
+
+    <!-- Bar Graph -->
+    <canvas id="barChart" width="800" height="400"></canvas>
   </div>
 
-  <script>
-    const colors = [
-      'rgba(255,99,132,0.85)',
-      'rgba(54,162,235,0.85)',
-      'rgba(255,206,86,0.85)',
-      'rgba(75,192,192,0.85)',
-      'rgba(153,102,255,0.85)',
-      'rgba(255,159,64,0.85)',
-      'rgba(99,255,132,0.85)',
-      'rgba(201,203,207,0.85)'
-    ];
+  <!-- Missing Uploads Tabs -->
+  <div id="tabContent">
+    <h3>No Upload Outlets</h3>
+    <div id="tabs"></div>
+    <div id="tabTable"></div>
+  </div>
 
-    const ctx = document.getElementById('uploadChart').getContext('2d');
+<script>
+const webAppURL = "https://script.google.com/macros/s/AKfycbz79Yslw0oBpD5eBpUXK3JtNKdyOHBURSvewf4rGX1Cz5jCpYmSo0Fqk1BwS8aXA7cf/exec";
 
-    // 🔴 Replace this with your Apps Script Web App URL
-    const DATA_URL = "https://script.google.com/macros/s/AKfycbxDn3kZhYoQeelwJfP7YauPfW2vTLvlSKqX3HtC9FUoFqOTshy8FVxrXMeTlBL-zhRU/exec";
+let chartInstance;
+let dashboardData;
 
-    fetch(DATA_URL)
-      .then(res => res.json())
-      .then(data => {
-        const names = data.map(row => row.Name);
-        const uploads = data.map(row => row.Uploads);
+// Fetch data
+fetch(webAppURL)
+  .then(res => res.json())
+  .then(data => {
+    console.log("Fetched Data:", data);
+    dashboardData = data;
 
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: names,
-            datasets: [{
-              label: 'Uploads',
-              data: uploads,
-              backgroundColor: colors,
-              borderRadius: 8
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-              legend: { display: false },
-              tooltip: { callbacks: { label: ctx => ctx.parsed.y + ' uploads' } }
-            },
-            scales: {
-              x: { grid: { display:false } },
-              y: { beginAtZero: true, ticks: { stepSize: 5 } }
-            }
+    // Create filter buttons and default dashboard
+    createButtons(Object.keys(data.sheetUploadStats));
+    filterBySheet("All", document.querySelector("#filterButtons button")); // default
+
+    // ---- Build Tabs for Missing Uploads ----
+const tabsContainer = document.getElementById("tabs");
+const tabTable = document.getElementById("tabTable");
+
+// Clear existing tabs
+tabsContainer.innerHTML = "";
+tabTable.innerHTML = "";
+
+// Create tabs for each person
+Object.keys(dashboardData.missingRows).forEach(person => {
+  const btn = document.createElement("button");
+  btn.innerText = person;
+
+  btn.onclick = () => {
+    // Highlight active tab
+    document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("activeTab"));
+    btn.classList.add("activeTab");
+
+    const rows = dashboardData.missingRows[person];
+
+    if (!rows || rows.length === 0) {
+      tabTable.innerHTML = `<p style="color:green;">✅ ${person} has no missing uploads</p>`;
+      return;
+    }
+
+    // Build table HTML
+    let html = `<table>
+        <tr>
+          <th>OUTLET</th><th>DATE</th><th>ADULT</th><th>COMPETITOR</th>
+          <th>MILK</th><th>PASTA</th><th>SAUCE</th><th>WK</th>
+        </tr>`;
+
+    rows.forEach(r => {
+      html += `<tr>
+        <td>${r.OUTLET}</td>
+        <td>${new Date(r.DATE).toLocaleDateString()}</td>
+        <td>${r.ADULT}</td>
+        <td>${r.COMPETITOR}</td>
+        <td>${r.MILK}</td>
+        <td>${r.PASTA}</td>
+        <td>${r.SAUCE}</td>
+        <td>${r.WK}</td>
+      </tr>`;
+    });
+
+    html += `</table>`;
+    tabTable.innerHTML = html;
+  };
+
+  tabsContainer.appendChild(btn);
+});
+
+  // CSS for active tab
+  const style = document.createElement('style');
+  style.innerHTML = `
+    #tabs button.activeTab {
+      background-color: #4CAF50;
+      color: white;
+      font-weight: bold;
+    }`;
+  document.head.appendChild(style);
+
+  // Download CSV
+
+
+
+  });
+
+// Create buttons
+function createButtons(sheetNames) {
+  const btnContainer = document.getElementById("filterButtons");
+  sheetNames.unshift("All");
+  sheetNames.forEach(name => {
+    const btn = document.createElement("button");
+    btn.innerText = name;
+    btn.onclick = () => filterBySheet(name, btn);
+    btnContainer.appendChild(btn);
+  });
+}
+
+// Handle filter
+function filterBySheet(sheetName, clickedBtn) {
+  document.querySelectorAll(".buttons button").forEach(btn => btn.classList.remove("active"));
+  if (clickedBtn) clickedBtn.classList.add("active");
+  renderDashboard(sheetName);
+}
+
+// Render dashboard
+function renderDashboard(filterSheet) {
+  const cardsContainer = document.getElementById("cardsContainer");
+  cardsContainer.innerHTML = "";
+
+  let colTotals = filterSheet === "All" ? dashboardData.overallTotals : dashboardData.sheetColumnTotals[filterSheet];
+
+  for (const [col, value] of Object.entries(colTotals)) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `<h3>${col}</h3><p>${value}</p>`;
+    cardsContainer.appendChild(card);
+  }
+
+  // ---- Chart ----
+  const labels = Object.keys(dashboardData.sheetUploadStats);
+  const uploadedData = labels.map(label => dashboardData.sheetUploadStats[label].uploaded);
+  const notUploadedData = labels.map(label => dashboardData.sheetUploadStats[label].notUploaded);
+
+  const ctx = document.getElementById("barChart").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Uploaded",
+          data: uploadedData,
+          backgroundColor: labels.map(label =>
+            filterSheet === "All" || filterSheet === label
+              ? "rgba(54, 162, 235, 0.9)"
+              : "rgba(200,200,200,0.3)"
+          )
+        },
+        {
+          label: "Not Uploaded",
+          data: notUploadedData,
+          backgroundColor: labels.map(label =>
+            filterSheet === "All" || filterSheet === label
+              ? "rgba(255, 0, 0, 0.9)"
+              : "rgba(200,200,200,0.3)"
+          )
+        }
+      ]
+    },
+    options: {
+      scales: {
+        x: {
+          ticks: {
+            font: { size: 15, weight: "bold" },
+            color: "black"
           }
-        });
-      });
-  </script>
+        },
+        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
+      },
+      plugins: {
+        legend: { display: true, position: "top" },
+        datalabels: {
+          display: true,
+          color: "white",
+          font: { weight: "bold", size: 15 },
+          formatter: value => value,
+          anchor: "center",
+          align: "center"
+        }
+      }
+    },
+    plugins: [
+      ChartDataLabels,
+      {
+        id: "percentageLabels",
+        afterDatasetsDraw(chart) {
+          const {ctx} = chart;
+          chart.data.datasets.forEach((dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex);
+            meta.data.forEach((bar, index) => {
+              const uploaded = uploadedData[index];
+              const notUploaded = notUploadedData[index];
+              const total = uploaded + notUploaded;
+              if (total === 0) return;
+              const value = dataset.data[index];
+              const percent = ((value / total) * 100).toFixed(0) + "%";
+
+              ctx.save();
+              ctx.fillStyle = datasetIndex === 0 ? "blue" : "red";
+              ctx.font = "13px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(percent, bar.x, bar.y - 5);
+              ctx.restore();
+            });
+          });
+        }
+      }
+    ]
+  });
+}
+</script>
 </body>
 </html>
