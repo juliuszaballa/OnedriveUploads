@@ -189,7 +189,7 @@
   </div>
 
 <script>
-const webAppURL = "https://script.google.com/macros/s/AKfycbw0uSr2-GnZTv5b5YLsI_kQ4Vm_modJ5iuh35ydm8sY_o8WUAK5IWvqdyU6yNXpQjgj/exec";
+const webAppURL = "https://script.google.com/macros/s/AKfycbz41HH2zAaDskXcbKSIrDG1iqYFjBrDUI_kiWEZvtW_fbOAA4TnkpbQi6VGZEH5i1g5/exec";
 
 let chartInstance;
 let dashboardData;
@@ -233,7 +233,7 @@ Object.keys(dashboardData.missingRows).forEach(person => {
     // Build table HTML
     let html = `<table>
         <tr>
-          <th>OUTLET</th><th>DATE</th><th>ADULT</th><th>COMPETITOR</th>
+          <th>OUTLET</th><th>DATE</th><th>ADULT</th><th>COMPETITOR</th><th>FLAVORED</th>
           <th>MILK</th><th>PASTA</th><th>SAUCE</th><th>WK</th>
         </tr>`;
 
@@ -243,6 +243,7 @@ Object.keys(dashboardData.missingRows).forEach(person => {
         <td>${new Date(r.DATE).toLocaleDateString()}</td>
         <td>${r.ADULT}</td>
         <td>${r.COMPETITOR}</td>
+        <td>${r.FLAVORED}</td>
         <td>${r.MILK}</td>
         <td>${r.PASTA}</td>
         <td>${r.SAUCE}</td>
