@@ -164,10 +164,27 @@
 
   <!-- HEADER -->
   <header>
-  
     <img src="RFM-logo.jpg" alt="Logo"> 
     <h1>Onedrive Uploads Dashboard</h1>
   </header>
+
+  <!-- DOWNLOAD BUTTON -->
+  <div style="margin: 20px;">
+    <a id="downloadBtn" href="#" target="_blank">
+      <button style="
+        padding: 10px 20px; 
+        border-radius: 30px; 
+        border: none; 
+        background-color: #4CAF50; 
+        color: white; 
+        font-weight: bold; 
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        ">
+        📥 Download Google Sheet
+      </button>
+    </a>
+  </div>
 
   <!-- Filter Buttons -->
   <div class="buttons" id="filterButtons"></div>
@@ -189,12 +206,17 @@
   </div>
 
 <script>
-const webAppURL = "https://script.google.com/macros/s/AKfycbxJhb-V984zpoSpLvpu2aSNODkZ0tNXQyKOEY6AMiTZ2mLGZzaJ3jBXIqGUcXHYOh0-/exec";
+const webAppURL = "https://script.google.com/macros/s/AKfycbzDROOWu57HQekne-bQUNWoG4yeWxFwlJni6z9h0W8W91skuggCvp90tvMWPsKMYabM/exec";
 
 let chartInstance;
 let dashboardData;
 
-// Fetch data
+// ------------------ SET DOWNLOAD LINK ------------------
+const fileId = "1y_pkB_JaJa8sHYf_GcJYvHfQGWne5OK3AHseUieVhh8"; // <-- Replace this
+const downloadLink = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
+document.getElementById("downloadBtn").href = downloadLink;
+
+// ------------------ FETCH DATA ------------------
 fetch(webAppURL)
   .then(res => res.json())
   .then(data => {
@@ -206,75 +228,66 @@ fetch(webAppURL)
     filterBySheet("All", document.querySelector("#filterButtons button")); // default
 
     // ---- Build Tabs for Missing Uploads ----
-const tabsContainer = document.getElementById("tabs");
-const tabTable = document.getElementById("tabTable");
+    const tabsContainer = document.getElementById("tabs");
+    const tabTable = document.getElementById("tabTable");
 
-// Clear existing tabs
-tabsContainer.innerHTML = "";
-tabTable.innerHTML = "";
+    tabsContainer.innerHTML = "";
+    tabTable.innerHTML = "";
 
-// Create tabs for each person
-Object.keys(dashboardData.missingRows).forEach(person => {
-  const btn = document.createElement("button");
-  btn.innerText = person;
+    Object.keys(dashboardData.missingRows).forEach(person => {
+      const btn = document.createElement("button");
+      btn.innerText = person;
 
-  btn.onclick = () => {
-    // Highlight active tab
-    document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("activeTab"));
-    btn.classList.add("activeTab");
+      btn.onclick = () => {
+        document.querySelectorAll("#tabs button").forEach(b => b.classList.remove("activeTab"));
+        btn.classList.add("activeTab");
 
-    const rows = dashboardData.missingRows[person];
+        const rows = dashboardData.missingRows[person];
 
-    if (!rows || rows.length === 0) {
-      tabTable.innerHTML = `<p style="color:green;">✅ ${person} has no missing uploads</p>`;
-      return;
-    }
+        if (!rows || rows.length === 0) {
+          tabTable.innerHTML = `<p style="color:green;">✅ ${person} has no missing uploads</p>`;
+          return;
+        }
 
-    // Build table HTML
-    let html = `<table>
-        <tr>
-          <th>OUTLET</th><th>DATE</th><th>ADULT</th><th>COMPETITOR</th><th>FLAVORED</th>
-          <th>MILK</th><th>PASTA</th><th>SAUCE</th><th>WK</th>
-        </tr>`;
+        let html = `<table>
+          <tr>
+            <th>OUTLET</th><th>DATE</th><th>COMPETITOR</th><th>FLAVORED</th>
+            <th>MILK</th><th>PASTA</th><th>SAUCE</th><th>WK</th>
+          </tr>`;
 
-    rows.forEach(r => {
-      html += `<tr>
-        <td>${r.OUTLET}</td>
-        <td>${new Date(r.DATE).toLocaleDateString()}</td>
-        <td>${r.ADULT}</td>
-        <td>${r.COMPETITOR}</td>
-        <td>${r.FLAVORED}</td>
-        <td>${r.MILK}</td>
-        <td>${r.PASTA}</td>
-        <td>${r.SAUCE}</td>
-        <td>${r.WK}</td>
-      </tr>`;
+        rows.forEach(r => {
+          html += `<tr>
+            <td>${r.OUTLET}</td>
+            <td>${new Date(r.DATE).toLocaleDateString()}</td>
+            <td>${r.COMPETITOR}</td>
+            <td>${r.FLAVORED}</td>
+            <td>${r.MILK}</td>
+            <td>${r.PASTA}</td>
+            <td>${r.SAUCE}</td>
+            <td>${r.WK}</td>
+          
+          </tr>`;
+        });
+
+        html += `</table>`;
+        tabTable.innerHTML = html;
+      };
+
+      tabsContainer.appendChild(btn);
     });
 
-    html += `</table>`;
-    tabTable.innerHTML = html;
-  };
-
-  tabsContainer.appendChild(btn);
-});
-
-  // CSS for active tab
-  const style = document.createElement('style');
-  style.innerHTML = `
-    #tabs button.activeTab {
-      background-color: #4CAF50;
-      color: white;
-      font-weight: bold;
-    }`;
-  document.head.appendChild(style);
-
-  // Download CSV
-
-
+    const style = document.createElement('style');
+    style.innerHTML = `
+      #tabs button.activeTab {
+        background-color: #4CAF50;
+        color: white;
+        font-weight: bold;
+      }`;
+    document.head.appendChild(style);
 
   });
 
-// Create buttons
+// ------------------ CREATE BUTTONS ------------------
 function createButtons(sheetNames) {
   const btnContainer = document.getElementById("filterButtons");
   sheetNames.unshift("All");
@@ -286,14 +299,14 @@ function createButtons(sheetNames) {
   });
 }
 
-// Handle filter
+// ------------------ FILTER DASHBOARD ------------------
 function filterBySheet(sheetName, clickedBtn) {
   document.querySelectorAll(".buttons button").forEach(btn => btn.classList.remove("active"));
   if (clickedBtn) clickedBtn.classList.add("active");
   renderDashboard(sheetName);
 }
 
-// Render dashboard
+// ------------------ RENDER DASHBOARD ------------------
 function renderDashboard(filterSheet) {
   const cardsContainer = document.getElementById("cardsContainer");
   cardsContainer.innerHTML = "";
@@ -301,6 +314,7 @@ function renderDashboard(filterSheet) {
   let colTotals = filterSheet === "All" ? dashboardData.overallTotals : dashboardData.sheetColumnTotals[filterSheet];
 
   for (const [col, value] of Object.entries(colTotals)) {
+    if (col === "ADULT") continue; // skip ADULT
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${col}</h3><p>${value}</p>`;
@@ -341,12 +355,7 @@ function renderDashboard(filterSheet) {
     },
     options: {
       scales: {
-        x: {
-          ticks: {
-            font: { size: 15, weight: "bold" },
-            color: "black"
-          }
-        },
+        x: { ticks: { font: { size: 15, weight: "bold" }, color: "black" } },
         y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } }
       },
       plugins: {
@@ -393,6 +402,3 @@ function renderDashboard(filterSheet) {
 </script>
 </body>
 </html>
-
-
-
